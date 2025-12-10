@@ -1,1 +1,13 @@
-safhsqjinwqjinjqwnjocn
+const express = require('express');
+const Database = require('better-sqlite3');
+const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const app = express();
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-jwt-key-change-in-production';
+const uploadsDir = path.join(__dirname, 'uploads');
+const dbPath = path.join(__dirname, 'database.db');
