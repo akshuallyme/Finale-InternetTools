@@ -92,3 +92,42 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+// Register
+app.post('/api/register', async (req, res) => {
+  const { email, username, password } = req.body;
+
+  if (!email || !username || !password) {
+    return res.status(400).json({ error: 'Email, username, and password are required' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const stmt = db.prepare('INSERT INTO users (email, username, password) VALUES (?, ?, ?)');
+    
+    try {
+      const info = stmt.run(email, username, hashedPassword);
+      res.json({ message: 'Registration successful', userId: info.lastInsertRowid });
+    } catch (err) {
+      if (err.message.includes('UNIQUE constraint failed: users.email')) {
+        return res.status(400).json({ error: 'Email already exists. Please use a different email.' });
+      } else if (err.message.includes('UNIQUE constraint failed: users.username')) {
+        return res.status(400).json({ error: 'Username already exists. Please choose a different username.' });
+      }
+      return res.status(500).json({ error: 'Registration failed' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
