@@ -152,7 +152,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const validPassword = bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -342,6 +342,7 @@ app.delete('/api/files/:id', authenticateToken, (req, res) => {
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\nShutting down gracefully...');
+  db.close();
   process.exit(0);
 });
 
