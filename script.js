@@ -190,3 +190,39 @@ app.get('/api/verify-token', authenticateToken, (req, res) => {
     }
   });
 });
+
+// Upload file
+app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const { privacy } = req.body;
+
+  if (!privacy || (privacy !== 'public' && privacy !== 'private')) {
+    // Delete uploaded file if privacy is invalid
+    fs.unlinkSync(req.file.path);
+    return res.status(400).json({ error: 'Privacy setting must be either "public" or "private"' });
+  }
+
+  const { filename, originalname, mimetype, size } = req.file;
+  const shareToken = privacy === 'private' ? crypto.randomBytes(32).toString('hex') : null;
+
+  try {
+    const stmt = db.prepare(
+      'INSERT INTO files (user_id, filename, original_name, file_type, file_size, privacy, share_token) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
+    
+    const info = stmt.run(req.user.id, filename, originalname, mimetype, size, privacy, shareToken);
+    
+    res.json({
+      message: 'File uploaded successfully',
+      fileId: info.lastInsertRowid,
+      filename: originalname,
+      privacy: privacy,
+      shareLink: shareToken ? `/share/${shareToken}` : null
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save file metadata' });
+  }
+});
