@@ -310,3 +310,49 @@ app.get('/share/:token', (req, res) => {
     res.status(500).send('<h1>Server error</h1>');
   }
 });
+
+// Delete file (only own files)
+app.delete('/api/files/:id', authenticateToken, (req, res) => {
+  const fileId = req.params.id;
+
+  try {
+    const getStmt = db.prepare('SELECT * FROM files WHERE id = ? AND user_id = ?');
+    const file = getStmt.get(fileId, req.user.id);
+
+    if (!file) {
+      return res.status(403).json({ error: 'Unauthorized: You can only delete your own files' });
+    }
+
+    // Delete from filesystem
+    const filePath = path.join(uploadsDir, file.filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete from database
+    const deleteStmt = db.prepare('DELETE FROM files WHERE id = ?');
+    deleteStmt.run(fileId);
+
+    res.json({ message: 'File deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete file' });
+  }
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\nShutting down gracefully...');
+  db.close();
+  process.exit(0);
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Database: ${dbPath}`);
+  console.log(`Uploads directory: ${uploadsDir}`);
+});
