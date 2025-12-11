@@ -358,3 +358,65 @@
       localStorage.removeItem('user');
       window.location.href = '/';
     });
+      async function loadMyFiles() {
+      try {
+        const res = await fetch('/api/my-files', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const files = await res.json();
+
+        const fileList = document.getElementById('file-list');
+
+        if (files.length === 0) {
+          fileList.innerHTML = '<div class="empty-state">You haven\'t uploaded any files yet</div>';
+          return;
+        }
+
+        fileList.innerHTML = files.map(file => `
+          <div class="file-item">
+            <div class="file-info">
+              <div class="file-icon">${getFileIcon(file.file_type)}</div>
+              <div class="file-details">
+                <div class="file-name">
+                  ${file.original_name}
+                  <span class="privacy-badge ${file.privacy}">${file.privacy.toUpperCase()}</span>
+                </div>
+                <div class="file-meta">
+                  ${formatFileSize(file.file_size)} • ${formatDate(file.upload_date)}
+                </div>
+              </div>
+            </div>
+            <div class="file-actions">
+              <button class="btn btn-download" onclick="downloadFile('${file.filename}')">Download</button>
+              ${file.privacy === 'private' ? `<button class="btn btn-share" onclick="showShareLink('${file.share_token}')">Share Link</button>` : ''}
+              <button class="btn btn-delete" onclick="deleteFile(${file.id})">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('file-list').innerHTML = 
+          '<div class="empty-state">Error loading files</div>';
+      }
+    }
+
+    function downloadFile(filename) {
+      window.location.href = `/api/download/${filename}`;
+    }
+
+    function showShareLink(token) {
+      const fullLink = window.location.origin + '/share/' + token;
+      document.getElementById('share-link-input').value = fullLink;
+      document.getElementById('share-modal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('share-modal').style.display = 'none';
+    }
+
+    function copyShareLink() {
+      const input = document.getElementById('share-link-input');
+      input.select();
+      document.execCommand('copy');
+      showMessage('Link copied to clipboard!', 'success');
+      setTimeout(closeModal, 1000);
+    }
