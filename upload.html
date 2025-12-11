@@ -259,3 +259,69 @@
     }
   </style>
 </head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <h1>📁 File Manager</h1>
+      <div class="nav">
+        <a href="/upload.html" class="nav-link active">Upload</a>
+        <a href="/downloads.html" class="nav-link">Downloads</a>
+        <a href="/myfiles.html" class="nav-link">My Files</a>
+        <span style="color: white; font-weight: 600;" id="username"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="upload-section">
+      <h2>Upload Files</h2>
+      
+      <div class="info-box">
+        <strong>📋 Upload Guidelines:</strong>
+        <ul style="margin-top: 8px; margin-left: 20px;">
+          <li>Only PDF and MP4 files are allowed</li>
+          <li>Maximum file size: 20 MB</li>
+          <li>Choose privacy: Public (visible to all) or Private (shareable link only)</li>
+        </ul>
+      </div>
+
+      <div id="message" class="message"></div>
+      
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+        <div class="upload-icon">📤</div>
+        <h3>Click to upload or drag and drop</h3>
+        <p>PDF and MP4 files only (Max 20MB)</p>
+        <input type="file" id="file-input" accept=".pdf,.mp4">
+        <div id="selected-file" class="selected-file" style="display: none;"></div>
+      </div>
+
+      <div class="privacy-selector" id="privacy-selector" style="display: none;">
+        <h3 style="margin-bottom: 12px;">Choose Privacy Setting:</h3>
+        
+        <label class="privacy-option" onclick="selectPrivacy('public')">
+          <input type="radio" name="privacy" value="public" id="privacy-public">
+          <div class="privacy-label">
+            <strong>🌐 Public</strong>
+            <small>Anyone can see and download this file from the Downloads page</small>
+          </div>
+        </label>
+
+        <label class="privacy-option" onclick="selectPrivacy('private')">
+          <input type="radio" name="privacy" value="private" id="privacy-private">
+          <div class="privacy-label">
+            <strong>🔒 Private</strong>
+            <small>Only accessible via a unique shareable link</small>
+          </div>
+        </label>
+      </div>
+
+      <button class="upload-btn" id="upload-btn" onclick="uploadFile()" disabled>Upload File</button>
+
+      <div id="share-link-box" style="display: none;" class="share-link">
+        <strong>🔗 Shareable Link (Private File):</strong>
+        <input type="text" id="share-link" readonly>
+        <button class="copy-btn" onclick="copyShareLink()">Copy Link</button>
+      </div>
+    </div>
+  </div>
