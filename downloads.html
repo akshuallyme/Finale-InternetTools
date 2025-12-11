@@ -244,3 +244,68 @@
       localStorage.removeItem('user');
       window.location.href = '/';
     });
+  async function loadPublicFiles() {
+      try {
+        const res = await fetch('/api/public-files');
+        const files = await res.json();
+
+        const fileList = document.getElementById('file-list');
+
+        if (files.length === 0) {
+          fileList.innerHTML = '<div class="empty-state">No public files available yet</div>';
+          return;
+        }
+
+        fileList.innerHTML = files.map(file => `
+          <div class="file-item">
+            <div class="file-info">
+              <div class="file-icon">${getFileIcon(file.file_type)}</div>
+              <div class="file-details">
+                <div class="file-name">${file.original_name}</div>
+                <div class="file-meta">
+                  Uploaded by: <strong>${file.username}</strong> • 
+                  ${formatFileSize(file.file_size)} • 
+                  ${formatDate(file.upload_date)}
+                </div>
+              </div>
+            </div>
+            <div class="file-actions">
+              <button class="btn btn-download" onclick="downloadFile('${file.filename}')">Download</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('file-list').innerHTML = 
+          '<div class="empty-state">Error loading files</div>';
+      }
+    }
+
+    function downloadFile(filename) {
+      window.location.href = `/api/download/${filename}`;
+    }
+
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+
+    function getFileIcon(type) {
+      if (type.includes('pdf')) return '📄';
+      if (type.includes('video')) return '🎥';
+      return '📎';
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+  </script>
+</body>
+</html>
