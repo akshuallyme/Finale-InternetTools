@@ -226,3 +226,87 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
     res.status(500).json({ error: 'Failed to save file metadata' });
   }
 });
+
+// Get public files (for Downloads page)
+app.get('/api/public-files', (req, res) => {
+  try {
+    const stmt = db.prepare(`
+      SELECT f.id, f.original_name, f.file_type, f.file_size, f.upload_date, f.filename, u.username
+      FROM files f
+      JOIN users u ON f.user_id = u.id
+      WHERE f.privacy = 'public'
+      ORDER BY f.upload_date DESC
+    `);
+    
+    const files = stmt.all();
+    res.json(files);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch public files' });
+  }
+});
+
+// Get user's own files (for My Files dashboard)
+app.get('/api/my-files', authenticateToken, (req, res) => {
+  try {
+    const stmt = db.prepare(`
+      SELECT id, original_name, file_type, file_size, upload_date, filename, privacy, share_token
+      FROM files
+      WHERE user_id = ?
+      ORDER BY upload_date DESC
+    `);
+    
+    const files = stmt.all(req.user.id);
+    res.json(files);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch files' });
+  }
+});
+
+// Download file by filename (for public files and own files)
+app.get('/api/download/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(uploadsDir, filename);
+
+  try {
+    // Check if file exists in database
+    const stmt = db.prepare('SELECT * FROM files WHERE filename = ?');
+    const file = stmt.get(filename);
+
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Check if file exists on disk
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found on server' });
+    }
+
+    res.download(filePath, file.original_name);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Access file via share token (for private files)
+app.get('/share/:token', (req, res) => {
+  const token = req.params.token;
+
+  try {
+    const stmt = db.prepare('SELECT * FROM files WHERE share_token = ?');
+    const file = stmt.get(token);
+
+    if (!file) {
+      return res.status(404).send('<h1>File not found or link is invalid</h1>');
+    }
+
+    const filePath = path.join(uploadsDir, file.filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('<h1>File not found on server</h1>');
+    }
+
+    res.download(filePath, file.original_name);
+  } catch (err) {
+    res.status(500).send('<h1>Server error</h1>');
+  }
+});
