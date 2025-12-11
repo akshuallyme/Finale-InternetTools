@@ -325,3 +325,127 @@
       </div>
     </div>
   </div>
+ <script>
+    let selectedFile = null;
+    let selectedPrivacy = null;
+
+    // Check authentication
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      window.location.href = '/';
+    }
+
+    fetch('/api/verify-token', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.valid) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+      } else {
+        document.getElementById('username').textContent = data.user.username;
+      }
+    })
+    .catch(() => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    });
+
+    const uploadArea = document.getElementById('upload-area');
+    
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragging');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragging');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragging');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelect(files[0]);
+      }
+    });
+
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+
+    function handleFileSelect(file) {
+      // Validate file type
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext !== 'pdf' && ext !== 'mp4') {
+        showMessage('Invalid file type. Only PDF and MP4 files are allowed.', 'error');
+        return;
+      }
+
+      // Validate file size
+      if (file.size > 20 * 1024 * 1024) {
+        showMessage('File too large. Maximum size is 20 MB.', 'error');
+        return;
+      }
+
+      selectedFile = file;
+      document.getElementById('selected-file').style.display = 'block';
+      document.getElementById('selected-file').innerHTML = `
+        <strong>Selected:</strong> ${file.name} (${formatFileSize(file.size)})
+      `;
+      document.getElementById('privacy-selector').style.display = 'block';
+      document.getElementById('share-link-box').style.display = 'none';
+      hideMessage();
+    }
+
+    function selectPrivacy(privacy) {
+      selectedPrivacy = privacy;
+      document.getElementById('privacy-' + privacy).checked = true;
+      
+      document.querySelectorAll('.privacy-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+      
+      document.getElementById('upload-btn').disabled = false;
+    }
+
+    async function uploadFile() {
+      if (!selectedFile || !selectedPrivacy) {
+        showMessage('Please select a file and privacy setting', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('privacy', selectedPrivacy);
+
+      const uploadBtn = document.getElementById('upload-btn');
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Uploading...';
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showMessage('File uploaded successfully!', 'success');
+          
+          if (data.shareLink) {
+            const fullLink = window.location.origin + data.shareLink;
+            document.getElementById('share-link').value = fullLink;
+            document.getElementById('share-link-box').style.display = 'block';
+          }
