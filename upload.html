@@ -449,3 +449,60 @@
             document.getElementById('share-link').value = fullLink;
             document.getElementById('share-link-box').style.display = 'block';
           }
+  // Reset form
+          selectedFile = null;
+          selectedPrivacy = null;
+          document.getElementById('file-input').value = '';
+          document.getElementById('selected-file').style.display = 'none';
+          document.getElementById('privacy-selector').style.display = 'none';
+          document.querySelectorAll('.privacy-option').forEach(opt => {
+            opt.classList.remove('selected');
+          });
+          document.querySelectorAll('input[name="privacy"]').forEach(input => {
+            input.checked = false;
+          });
+          uploadBtn.textContent = 'Upload File';
+        } else {
+          showMessage(data.error || 'Upload failed', 'error');
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = 'Upload File';
+        }
+      } catch (err) {
+        showMessage('Connection error', 'error');
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload File';
+      }
+    }
+
+    function copyShareLink() {
+      const linkInput = document.getElementById('share-link');
+      linkInput.select();
+      document.execCommand('copy');
+      alert('Link copied to clipboard!');
+    }
+
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message ${type}`;
+      msg.style.display = 'block';
+    }
+
+    function hideMessage() {
+      document.getElementById('message').style.display = 'none';
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+  </script>
+</body>
+</html>
