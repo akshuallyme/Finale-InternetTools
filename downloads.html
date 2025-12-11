@@ -219,3 +219,28 @@
       </div>
     </div>
   </div>
+  <script>
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      window.location.href = '/';
+    }
+
+    fetch('/api/verify-token', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.valid) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+      } else {
+        document.getElementById('username').textContent = data.user.username;
+        loadPublicFiles();
+      }
+    })
+    .catch(() => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    });
