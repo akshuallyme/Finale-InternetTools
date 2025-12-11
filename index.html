@@ -135,3 +135,46 @@
     }
   </style>
 </head>
+<body>
+  <div class="container">
+    <h1>🔐 File Upload System</h1>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Login</div>
+      <div class="tab" onclick="switchTab('register')">Register</div>
+    </div>
+
+    <div id="login-section" class="form-section active">
+      <div class="input-group">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" placeholder="Enter your email">
+      </div>
+      <div class="input-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password">
+      </div>
+      <button onclick="login()">Login</button>
+      <div id="login-message" class="message"></div>
+    </div>
+
+    <div id="register-section" class="form-section">
+      <div class="input-group">
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" placeholder="Enter your email">
+      </div>
+      <div class="input-group">
+        <label for="register-username">Username</label>
+        <input type="text" id="register-username" placeholder="Choose a username">
+      </div>
+      <div class="input-group">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" placeholder="Choose password (min 6 chars)">
+      </div>
+      <div class="input-group">
+        <label for="register-password-confirm">Confirm Password</label>
+        <input type="password" id="register-password-confirm" placeholder="Confirm your password">
+      </div>
+      <button onclick="register()">Register</button>
+      <div id="register-message" class="message"></div>
+    </div>
+  </div>
