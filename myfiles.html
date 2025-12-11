@@ -420,3 +420,69 @@
       showMessage('Link copied to clipboard!', 'success');
       setTimeout(closeModal, 1000);
     }
+
+    async function deleteFile(fileId) {
+      if (!confirm('Are you sure you want to delete this file? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/files/${fileId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showMessage('File deleted successfully', 'success');
+          loadMyFiles();
+        } else {
+          showMessage(data.error || 'Failed to delete file', 'error');
+        }
+      } catch (err) {
+        showMessage('Connection error', 'error');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message ${type}`;
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 3000);
+    }
+
+    function getFileIcon(type) {
+      if (type.includes('pdf')) return '📄';
+      if (type.includes('video')) return '🎥';
+      return '📎';
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('share-modal');
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+  </script>
+</body>
+</html>
