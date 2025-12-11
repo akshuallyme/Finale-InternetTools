@@ -178,3 +178,62 @@
       <div id="register-message" class="message"></div>
     </div>
   </div>
+   <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+      
+      if (tab === 'login') {
+        document.querySelector('.tab:first-child').classList.add('active');
+        document.getElementById('login-section').classList.add('active');
+      } else {
+        document.querySelector('.tab:last-child').classList.add('active');
+        document.getElementById('register-section').classList.add('active');
+      }
+      
+      hideMessages();
+    }
+
+    function showMessage(elementId, message, type) {
+      const el = document.getElementById(elementId);
+      el.textContent = message;
+      el.className = `message ${type}`;
+      el.style.display = 'block';
+    }
+
+    function hideMessages() {
+      document.querySelectorAll('.message').forEach(m => m.style.display = 'none');
+    }
+
+    async function login() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      if (!email || !password) {
+        showMessage('login-message', 'Please fill in all fields', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // Store token in localStorage
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          showMessage('login-message', 'Login successful! Redirecting...', 'success');
+          setTimeout(() => window.location.href = '/upload.html', 1000);
+        } else {
+          showMessage('login-message', data.error || 'Login failed', 'error');
+        }
+      } catch (err) {
+        showMessage('login-message', 'Connection error', 'error');
+      }
+    }
