@@ -292,3 +292,44 @@
     }
   </style>
 </head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <h1>📁 File Manager</h1>
+      <div class="nav">
+        <a href="/upload.html" class="nav-link">Upload</a>
+        <a href="/downloads.html" class="nav-link">Downloads</a>
+        <a href="/myfiles.html" class="nav-link active">My Files</a>
+        <span style="color: white; font-weight: 600;" id="username"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="files-section">
+      <h2>My Files Dashboard</h2>
+      
+      <div class="info-box">
+        <strong>📂 Your Files:</strong> Manage all your uploaded files. Download or delete them as needed. Private files include shareable links.
+      </div>
+
+      <div id="message" class="message"></div>
+
+      <div id="file-list" class="file-list">
+        <div class="loading">Loading your files...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="share-modal" class="modal">
+    <div class="modal-content">
+      <h3>🔗 Shareable Link</h3>
+      <p>Share this link to give others access to your private file:</p>
+      <input type="text" id="share-link-input" readonly>
+      <div class="modal-buttons">
+        <button class="btn btn-download" onclick="copyShareLink()">Copy Link</button>
+        <button class="btn btn-delete" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
