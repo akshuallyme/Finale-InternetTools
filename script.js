@@ -131,3 +131,62 @@ app.post('/api/register', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Login
+app.post('/api/login', async (req, res) => {
+  const { email, password, username } = req.body;
+
+  // Accept either email or username for login
+  const loginIdentifier = email || username;
+
+  if (!loginIdentifier || !password) {
+    return res.status(400).json({ error: 'Email/Username and password are required' });
+  }
+
+  try {
+    // Check if user exists by email or username
+    const stmt = db.prepare('SELECT * FROM users WHERE email = ? OR username = ?');
+    const user = stmt.get(loginIdentifier, loginIdentifier);
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const validPassword = bcrypt.compare(password, user.password);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, username: user.username, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token: token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Verify token
+app.get('/api/verify-token', authenticateToken, (req, res) => {
+  res.json({
+    valid: true,
+    user: {
+      id: req.user.id,
+      username: req.user.username,
+      email: req.user.email
+    }
+  });
+});
